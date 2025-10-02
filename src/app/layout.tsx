@@ -1,28 +1,23 @@
-import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
-import { Suspense } from "react"
-import "./globals.css"
+import "@/styles/globals.css"
 
 export const metadata: Metadata = {
-  title: "Sistema de Gestión de Árbitros",
-  description: "Plataforma para coordinar asignaciones de árbitros y gestionar cobros",
-  generator: "v0.app",
+    title: "SGAD - Sistema de Gestión de Árbitros y Designaciones",
+    description: "Sistema de gestión para árbitros, partidos y designaciones",
 }
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode
+    children: React.ReactNode
 }>) {
-  return (
-    <html lang="es" className="dark">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <Analytics />
-      </body>
-    </html>
-  )
+    return (
+        <html lang="es" suppressHydrationWarning>
+            <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+                {children}
+            </body>
+        </html>
+    )
 }
