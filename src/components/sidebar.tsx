@@ -44,6 +44,11 @@ const navigation = [
     href: "/configuracion",
     icon: Settings,
   },
+  {
+    name: "Arbitro",
+    href: "/arbitro-dashboard",
+      icon: Calendar,
+  },
 ]
 
 export function Sidebar() {

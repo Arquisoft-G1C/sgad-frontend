@@ -4,6 +4,8 @@ import { RecentMatches } from "@/components/recent-matches"
 import { AlertsPanel } from "@/components/alerts-panel"
 
 export default function Dashboard() {
+
+  const lastUpdate = new Date().toLocaleString("es-ES");
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -17,7 +19,7 @@ export default function Dashboard() {
               <p className="text-muted-foreground">Resumen de la actividad del sistema de árbitros</p>
             </div>
             <div className="text-sm text-muted-foreground">
-              Última actualización: {new Date().toLocaleString("es-ES")}
+              Última actualización: {lastUpdate}
             </div>
           </div>
 
