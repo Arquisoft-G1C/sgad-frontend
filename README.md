@@ -1,36 +1,168 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SGAD – Frontend
 
-## Getting Started
+Interfaz web del **SGAD (Sistema de Gestión de Árbitros y Designaciones)**.  
+Este módulo provee la capa de **presentación** para administradores, clubes y árbitros, permitiendo interactuar con los microservicios del sistema a través del **API Gateway**.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📖 Descripción
+
+El **Frontend de SGAD** está construido con **React + Vite** y sirve como punto de entrada para los usuarios del sistema:  
+- **Administrador**: gestionar partidos, designar árbitros y consultar reportes.  
+- **Club/Equipo**: solicitar árbitros y ver asignaciones.  
+- **Árbitro**: consultar designaciones y disponibilidad.  
+
+Toda la comunicación con los microservicios se realiza a través del **API Gateway** (`sgad-api-gateway`).
+
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+---
+
+## 🖼️ Tecnologías Utilizadas
+
+- **React 18** – librería de JavaScript para la construcción de interfaces.  
+- **Vite** – herramienta rápida de desarrollo y empaquetado.  
+- **JavaScript/TypeScript** – lenguaje principal del frontend.  
+- **CSS / Tailwind (opcional según configuración)** – estilos y diseño responsivo.  
+- **Axios o Fetch API** – para el consumo de APIs REST.  
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
+sgad-frontend/
+│── index.html              # Página base del frontend
+│── package.json            # Dependencias del proyecto
+│── vite.config.js          # Configuración de Vite
+│
+├── public/                 # Recursos públicos
+│   └── vite.svg
+│
+├── src/                    # Código fuente principal
+│   ├── main.jsx            # Punto de entrada
+│   ├── App.jsx             # Componente principal
+│   ├── App.css             # Estilos principales
+│   ├── index.css           # Estilos globales
+│   └── components/         # Componentes reutilizables (opcional)
+│
+└── páginas_vista_admin/    # Interfaz para administrador (ej. gestión de partidos y árbitros)
+    ├── next.config.mjs
+    ├── tsconfig.json
+    ├── package.json
+    └── otros archivos de configuración
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Requisitos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Node.js 18+**  
+- **npm** o **yarn** como gestor de paquetes  
+- Docker (opcional, para despliegue contenerizado)  
 
-## Learn More
+Instalar dependencias:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ▶️ Ejecución Local
 
-## Deploy on Vercel
+1. Clonar el repositorio:  
+   ```bash
+   git clone https://github.com/Arquisoft-G1C/sgad-frontend.git
+   cd sgad-frontend
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Instalar dependencias:  
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Ejecutar en modo desarrollo:  
+   ```bash
+   npm run dev
+   ```
+
+4. Acceder en el navegador:  
+   ```
+   http://localhost:3000
+   ```
+
+---
+
+## 🐳 Despliegue con Docker
+
+1. Crear la imagen:  
+   ```bash
+   docker build -t sgad-frontend .
+   ```
+
+2. Ejecutar el contenedor:  
+   ```bash
+   docker run -d -p 3000:3000 sgad-frontend
+   ```
+
+---
+
+## 📡 Integración con SGAD
+
+- El **Frontend** se comunica exclusivamente con el **API Gateway**.  
+- Todas las peticiones del usuario (gestión de partidos, designaciones, disponibilidad) se enrutan hacia:  
+  - `sgad-match-management`  
+  - `sgad-referee-management`  
+  - `sgad-auth-service`  
+- Forma parte del ecosistema desplegado con `docker-compose` en **`sgad-main`**.  
+
+---
+
+## 👨‍💻 Scripts Disponibles
+
+- `npm run dev` → Ejecuta el proyecto en modo desarrollo (hot reload).  
+- `npm run build` → Construye la aplicación para producción.  
+- `npm run preview` → Previsualiza la versión construida.  
+
+---
+
+## 📑 Ejemplo de Configuración de API
+
+En un archivo de configuración (ej. `src/config.js`):
+
+```javascript
+export const API_URL = "http://localhost:8080"; // API Gateway
+```
+
+De esta forma, cualquier componente puede hacer peticiones:
+
+```javascript
+import { API_URL } from "./config";
+
+fetch(`${API_URL}/matches`)
+  .then(res => res.json())
+  .then(data => console.log(data));
+```
+
+---
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+---
+
+## 📅 Estado Actual
+
+Este frontend es un prototipo inicial (Prototype 1) y está en desarrollo.  
+Las pantallas implementadas corresponden a la vista de **administrador** y módulos básicos de gestión.  
+
+---
