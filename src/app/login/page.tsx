@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { authService } from "@/services"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -38,26 +39,13 @@ export default function LoginPage() {
         }
 
         try {
-            // Aqui ira la llamada al API Gateway
-            // const response = await fetch(`${API_URL}/auth/login`, {
-            //   method: "POST",
-            //   headers: { "Content-Type": "application/json" },
-            //   body: JSON.stringify(formData),
-            // })
-
-            // Simulacion de login (remover cuando conectes con el backend)
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // Simulacion de validacion
-            if (formData.email === "admin@sgad.com" && formData.password === "admin123") {
-                // Guardar token en localStorage o cookie
-                // localStorage.setItem("token", response.token)
-                router.push("/")
-            } else {
-                setError("Credenciales incorrectas")
-            }
-        } catch (err) {
-            setError("Error al conectar con el servidor. Intenta nuevamente.")
+            // Call auth service
+            await authService.login(formData)
+            
+            // Redirect to dashboard on success
+            router.push("/")
+        } catch (err: any) {
+            setError(err.message || "Error al conectar con el servidor. Intenta nuevamente.")
         } finally {
             setIsLoading(false)
         }
