@@ -16,6 +16,20 @@ export const API_CONFIG = {
     process.env.NEXT_PUBLIC_AVAILABILITY_SERVICE_URL || "http://localhost:8080",
 } as const;
 
+// 🔍 DEBUG: Log API configuration on initialization
+if (typeof window !== 'undefined') {
+  console.log('🔍 [API_CONFIG] Initialized with:', {
+    API_CONFIG,
+    allEnvVars: {
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+      NEXT_PUBLIC_MATCH_SERVICE_URL: process.env.NEXT_PUBLIC_MATCH_SERVICE_URL,
+      NEXT_PUBLIC_REFEREE_SERVICE_URL: process.env.NEXT_PUBLIC_REFEREE_SERVICE_URL,
+      NEXT_PUBLIC_AUTH_SERVICE_URL: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL,
+      NEXT_PUBLIC_AVAILABILITY_SERVICE_URL: process.env.NEXT_PUBLIC_AVAILABILITY_SERVICE_URL,
+    },
+  });
+}
+
 /**
  * Get auth token from localStorage
  */

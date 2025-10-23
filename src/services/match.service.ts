@@ -72,12 +72,31 @@ class MatchService {
     if (params?.referee_id) queryParams.append('referee_id', params.referee_id.toString());
 
     const url = `${this.baseUrl}/matches${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await fetch(url, {
-      method: 'GET',
+    
+    // 🔍 DEBUG: Log request details
+    console.log('🔍 [MatchService] Debug Info:', {
+      baseUrl: this.baseUrl,
+      fullUrl: url,
+      params,
       headers: this.getHeaders(),
+      API_CONFIG: API_CONFIG,
+      env_NEXT_PUBLIC_MATCH_SERVICE_URL: process.env.NEXT_PUBLIC_MATCH_SERVICE_URL,
+      env_NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     });
 
-    if (!response.ok) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      console.log('✅ [MatchService] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
       throw new Error('Error al obtener partidos');
     }
 
