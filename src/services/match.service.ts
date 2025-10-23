@@ -97,10 +97,30 @@ class MatchService {
       });
 
       if (!response.ok) {
-      throw new Error('Error al obtener partidos');
-    }
+        const errorText = await response.text();
+        console.error('❌ [MatchService] Response not OK:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+        });
+        throw new Error(`Error al obtener partidos: ${response.statusText}`);
+      }
 
-    return response.json();
+      const data = await response.json();
+      console.log('✅ [MatchService] Data received:', {
+        count: data.length,
+        firstMatch: data[0],
+      });
+      return data;
+    } catch (error) {
+      console.error('❌ [MatchService] Fetch failed with error:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        url,
+      });
+      throw error;
+    }
   }
 
   /**
