@@ -46,15 +46,24 @@ async function getServerHeaders(): Promise<HeadersInit> {
 // ============================================================================
 
 export interface Match {
-  id: number;
-  home_team: string;
-  away_team: string;
-  date: string;
-  time: string;
-  location: string;
+  id: string; // UUID from API
+  home_team_id: string;
+  away_team_id: string;
+  match_date: string; // ISO datetime from API
+  venue: string;
+  sport: string;
   category: string;
-  competition: string;
+  tournament: string;
   status: string;
+  created_at: string;
+  updated_at: string;
+  // Legacy fields for backwards compatibility
+  home_team?: string;
+  away_team?: string;
+  date?: string;
+  time?: string;
+  location?: string;
+  competition?: string;
   referee_id?: number;
   notes?: string;
 }
@@ -310,13 +319,19 @@ export async function getDashboardStatsServer(): Promise<DashboardStats> {
       getRefereesServer({ limit: 1000 }),
     ]);
 
-    // Calculate today's date
+    // Calculate today's date (format: YYYY-MM-DD)
     const today = new Date().toISOString().split("T")[0];
 
-    // Filter today's matches
-    const todayMatches = matches.filter((m) => m.date === today);
-    const unassignedMatches = todayMatches.filter((m) => !m.referee_id);
-    const assignedMatches = todayMatches.filter((m) => m.referee_id);
+    // Filter today's matches - use match_date field from API
+    const todayMatches = matches.filter((m) => {
+      const matchDate = (m.match_date || m.date || "").split("T")[0];
+      return matchDate === today;
+    });
+    
+    // Note: API doesn't return referee_id yet (assignments are in separate table)
+    // For now, count all matches as unassigned until assignment API is integrated
+    const unassignedMatches = todayMatches;
+    const assignedMatches: Match[] = [];
 
     // Count active and available referees
     // Note: API returns is_available, not status field
