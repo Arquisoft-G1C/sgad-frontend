@@ -276,9 +276,8 @@ export async function getRefereeServer(
 export async function getAvailableRefereesServer(): Promise<Referee[]> {
   try {
     const referees = await getRefereesServer({ limit: 100 });
-    return referees.filter(
-      (referee) => referee.available && referee.status === "active"
-    );
+    // Filter by available status (API returns is_available field)
+    return referees.filter((referee) => referee.available === true);
   } catch (error) {
     console.error("Error fetching available referees:", error);
     return [];
@@ -320,10 +319,9 @@ export async function getDashboardStatsServer(): Promise<DashboardStats> {
     const assignedMatches = todayMatches.filter((m) => m.referee_id);
 
     // Count active and available referees
-    const activeReferees = referees.filter((r) => r.status === "active");
-    const availableReferees = referees.filter(
-      (r) => r.available && r.status === "active"
-    );
+    // Note: API returns is_available, not status field
+    const activeReferees = referees; // All referees in the system are considered active
+    const availableReferees = referees.filter((r) => r.available === true);
 
     // TODO: Implement conflict detection logic
     // For now, conflicts = 0
