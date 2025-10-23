@@ -1,11 +1,44 @@
-"use client"
-
+import { Suspense } from "react"
 import { Sidebar } from "@/components/sidebar"
-import { DashboardStats } from "@/components/dashboard-stats"
-import { RecentMatches } from "@/components/recent-matches"
-import { AlertsPanel } from "@/components/alerts-panel"
+import { DashboardStats } from "@/components/server/dashboard-stats"
+import { RecentMatches } from "@/components/server/recent-matches"
+import { AlertsPanelServer } from "@/components/server/alerts-panel-server"
+import { Card, CardContent } from "@/components/ui/card"
 
-export default function DashboardPage() {
+function StatsLoading() {
+    return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                    <CardContent className="p-6">
+                        <div className="animate-pulse space-y-3">
+                            <div className="h-4 bg-muted rounded w-24"></div>
+                            <div className="h-8 bg-muted rounded w-16"></div>
+                            <div className="h-3 bg-muted rounded w-32"></div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    )
+}
+
+function MatchesLoading() {
+    return (
+        <Card>
+            <CardContent className="p-6">
+                <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-muted rounded w-32"></div>
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-20 bg-muted rounded"></div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+export default async function DashboardPage() {
     return (
         <div className="flex h-screen bg-background">
             <Sidebar />
@@ -19,11 +52,18 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    <DashboardStats />
-
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <RecentMatches />
-                        <AlertsPanel />
+                    <div className="space-y-6">
+                        <Suspense fallback={<StatsLoading />}>
+                            <DashboardStats />
+                        </Suspense>
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <Suspense fallback={<MatchesLoading />}>
+                                <RecentMatches />
+                            </Suspense>
+                            <Suspense fallback={<MatchesLoading />}>
+                                <AlertsPanelServer />
+                            </Suspense>
+                        </div>
                     </div>
                 </div>
             </main>

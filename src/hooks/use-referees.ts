@@ -3,29 +3,34 @@
  * Custom hook for managing referee data
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { refereeService, Referee, RefereeCreate, RefereeUpdate } from '@/services';
+import { useState, useEffect, useCallback } from "react";
+import {
+  refereeService,
+  Referee,
+  RefereeCreate,
+  RefereeUpdate,
+} from "@/services";
 
 export function useReferees() {
   const [referees, setReferees] = useState<Referee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadReferees = useCallback(async (params?: {
-    skip?: number;
-    limit?: number;
-  }) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await refereeService.getReferees(params);
-      setReferees(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadReferees = useCallback(
+    async (params?: { skip?: number; limit?: number }) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await refereeService.getReferees(params);
+        setReferees(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   const getReferee = useCallback(async (id: number) => {
     try {
@@ -41,7 +46,7 @@ export function useReferees() {
     try {
       setError(null);
       const newReferee = await refereeService.createReferee(data);
-      setReferees(prev => [...prev, newReferee]);
+      setReferees((prev) => [...prev, newReferee]);
       return newReferee;
     } catch (err: any) {
       setError(err.message);
@@ -53,7 +58,9 @@ export function useReferees() {
     try {
       setError(null);
       const updatedReferee = await refereeService.updateReferee(id, data);
-      setReferees(prev => prev.map(r => r.id === id ? updatedReferee : r));
+      setReferees((prev) =>
+        prev.map((r) => (r.id === id ? updatedReferee : r))
+      );
       return updatedReferee;
     } catch (err: any) {
       setError(err.message);
@@ -65,7 +72,7 @@ export function useReferees() {
     try {
       setError(null);
       await refereeService.deleteReferee(id);
-      setReferees(prev => prev.filter(r => r.id !== id));
+      setReferees((prev) => prev.filter((r) => r.id !== id));
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -82,17 +89,42 @@ export function useReferees() {
     }
   }, []);
 
-  const updateAvailability = useCallback(async (id: number, available: boolean) => {
-    try {
-      setError(null);
-      const updatedReferee = await refereeService.updateAvailability(id, available);
-      setReferees(prev => prev.map(r => r.id === id ? updatedReferee : r));
-      return updatedReferee;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    }
-  }, []);
+  const updateAvailability = useCallback(
+    async (id: number, available: boolean) => {
+      try {
+        setError(null);
+        const updatedReferee = await refereeService.updateAvailability(
+          id,
+          available
+        );
+        setReferees((prev) =>
+          prev.map((r) => (r.id === id ? updatedReferee : r))
+        );
+        return updatedReferee;
+      } catch (err: any) {
+        setError(err.message);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const fetchReferees = useCallback(
+    async (params?: { skip?: number; limit?: number }) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await refereeService.getReferees(params);
+        return data;
+      } catch (err: any) {
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     loadReferees();
@@ -103,6 +135,7 @@ export function useReferees() {
     loading,
     error,
     loadReferees,
+    fetchReferees,
     getReferee,
     createReferee,
     updateReferee,
@@ -111,4 +144,3 @@ export function useReferees() {
     updateAvailability,
   };
 }
-
