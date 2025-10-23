@@ -7,10 +7,15 @@ import { RefereeForm } from "@/components/referees/referee-form"
 import { RefereeFilters } from "@/components/referees/referee-filters"
 import { RefereeList } from "@/components/referees/referee-list"
 import { Plus, Users } from "lucide-react"
+import { useReferees } from "@/hooks/use-referees"
+import { Referee } from "@/services"
+import { useToast } from "@/hooks/use-toast"
 
 export default function ArbitrosPage() {
+  const { deleteReferee } = useReferees()
+  const { toast } = useToast()
   const [showForm, setShowForm] = useState(false)
-  const [editingReferee, setEditingReferee] = useState(null)
+  const [editingReferee, setEditingReferee] = useState<Referee | null>(null)
   const [filters, setFilters] = useState({
     search: "",
     category: "",
@@ -43,16 +48,34 @@ export default function ArbitrosPage() {
     setShowForm(true)
   }
 
-  const handleSubmitReferee = (data: any) => {
-    console.log("Submitting referee:", data)
-    // Here you would typically save to your backend
+  const handleSubmitReferee = () => {
+    // Form now handles submission internally
     setShowForm(false)
     setEditingReferee(null)
   }
 
-  const handleDeleteReferee = (refereeId: number) => {
-    console.log("Deleting referee:", refereeId)
-    // Here you would typically delete from your backend
+  const handleRefresh = () => {
+    // Trigger refresh of referee list
+    window.location.reload()
+  }
+
+  const handleDeleteReferee = async (refereeId: number) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este árbitro?")) {
+      try {
+        await deleteReferee(refereeId)
+        toast({
+          title: "Árbitro eliminado",
+          description: "El árbitro se eliminó correctamente",
+        })
+        handleRefresh()
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar el árbitro",
+          variant: "destructive",
+        })
+      }
+    }
   }
 
   const handleViewDetails = (referee: any) => {
@@ -100,6 +123,7 @@ export default function ArbitrosPage() {
             onEdit={handleEditReferee}
             onDelete={handleDeleteReferee}
             onViewDetails={handleViewDetails}
+            onRefresh={handleRefresh}
           />
         </div>
       </main>

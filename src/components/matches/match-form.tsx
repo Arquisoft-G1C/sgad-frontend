@@ -9,33 +9,64 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarIcon, Clock, MapPin, Users } from "lucide-react"
+import { CalendarIcon, Clock, MapPin, Users, Loader2 } from "lucide-react"
+import { useMatches } from "@/hooks/use-matches"
+import { Match, MatchCreate, MatchUpdate } from "@/services"
+import { useToast } from "@/hooks/use-toast"
 
 interface MatchFormProps {
-  match?: any
-  onSubmit: (data: any) => void
+  match?: Match
+  onSubmit?: () => void
   onCancel: () => void
 }
 
 export function MatchForm({ match, onSubmit, onCancel }: MatchFormProps) {
+  const { createMatch, updateMatch, loading } = useMatches()
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
-    homeTeam: match?.homeTeam || "",
-    awayTeam: match?.awayTeam || "",
+    home_team: match?.home_team || "",
+    away_team: match?.away_team || "",
     date: match?.date || "",
     time: match?.time || "",
-    venue: match?.venue || "",
+    location: match?.location || "",
     category: match?.category || "",
     competition: match?.competition || "",
-    fee: match?.fee || "",
+    referee_id: match?.referee_id || 1, // Default referee ID for now
     notes: match?.notes || "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    try {
+      if (match) {
+        // Update existing match
+        const updateData: MatchUpdate = { ...formData }
+        await updateMatch(match.id, updateData)
+        toast({
+          title: "Partido actualizado",
+          description: "El partido se actualizó correctamente",
+        })
+      } else {
+        // Create new match
+        const createData: MatchCreate = { ...formData } as MatchCreate
+        await createMatch(createData)
+        toast({
+          title: "Partido creado",
+          description: "El partido se creó correctamente",
+        })
+      }
+      onSubmit?.()
+      onCancel()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo guardar el partido",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -48,14 +79,14 @@ export function MatchForm({ match, onSubmit, onCancel }: MatchFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="homeTeam">Equipo Local</Label>
+              <Label htmlFor="home_team">Equipo Local</Label>
               <div className="relative">
                 <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="homeTeam"
+                  id="home_team"
                   placeholder="Nombre del equipo local"
-                  value={formData.homeTeam}
-                  onChange={(e) => handleChange("homeTeam", e.target.value)}
+                  value={formData.home_team}
+                  onChange={(e) => handleChange("home_team", e.target.value)}
                   className="pl-10"
                   required
                 />
@@ -63,14 +94,14 @@ export function MatchForm({ match, onSubmit, onCancel }: MatchFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="awayTeam">Equipo Visitante</Label>
+              <Label htmlFor="away_team">Equipo Visitante</Label>
               <div className="relative">
                 <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="awayTeam"
+                  id="away_team"
                   placeholder="Nombre del equipo visitante"
-                  value={formData.awayTeam}
-                  onChange={(e) => handleChange("awayTeam", e.target.value)}
+                  value={formData.away_team}
+                  onChange={(e) => handleChange("away_team", e.target.value)}
                   className="pl-10"
                   required
                 />
@@ -108,14 +139,14 @@ export function MatchForm({ match, onSubmit, onCancel }: MatchFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="venue">Estadio/Cancha</Label>
+              <Label htmlFor="location">Estadio/Cancha</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="venue"
+                  id="location"
                   placeholder="Nombre del estadio o cancha"
-                  value={formData.venue}
-                  onChange={(e) => handleChange("venue", e.target.value)}
+                  value={formData.location}
+                  onChange={(e) => handleChange("location", e.target.value)}
                   className="pl-10"
                   required
                 />
@@ -152,19 +183,6 @@ export function MatchForm({ match, onSubmit, onCancel }: MatchFormProps) {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fee">Tarifa (€)</Label>
-              <Input
-                id="fee"
-                type="number"
-                placeholder="0.00"
-                value={formData.fee}
-                onChange={(e) => handleChange("fee", e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -179,10 +197,11 @@ export function MatchForm({ match, onSubmit, onCancel }: MatchFormProps) {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {match ? "Actualizar Partido" : "Crear Partido"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               Cancelar
             </Button>
           </div>

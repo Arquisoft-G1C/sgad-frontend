@@ -7,10 +7,15 @@ import { MatchForm } from "@/components/matches/match-form"
 import { MatchFilters } from "@/components/matches/match-filters"
 import { MatchList } from "@/components/matches/match-list"
 import { Plus, Calendar } from "lucide-react"
+import { useMatches } from "@/hooks/use-matches"
+import { Match } from "@/services"
+import { useToast } from "@/hooks/use-toast"
 
 export default function PartidosPage() {
+  const { deleteMatch } = useMatches()
+  const { toast } = useToast()
   const [showForm, setShowForm] = useState(false)
-  const [editingMatch, setEditingMatch] = useState(null)
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null)
   const [filters, setFilters] = useState({
     search: "",
     date: "",
@@ -43,16 +48,34 @@ export default function PartidosPage() {
     setShowForm(true)
   }
 
-  const handleSubmitMatch = (data: any) => {
-    console.log("Submitting match:", data)
-    // Here you would typically save to your backend
+  const handleSubmitMatch = () => {
+    // Form now handles submission internally
     setShowForm(false)
     setEditingMatch(null)
   }
 
-  const handleDeleteMatch = (matchId: number) => {
-    console.log("Deleting match:", matchId)
-    // Here you would typically delete from your backend
+  const handleRefresh = () => {
+    // Trigger refresh of match list by toggling a key
+    window.location.reload()
+  }
+
+  const handleDeleteMatch = async (matchId: number) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este partido?")) {
+      try {
+        await deleteMatch(matchId)
+        toast({
+          title: "Partido eliminado",
+          description: "El partido se eliminó correctamente",
+        })
+        handleRefresh()
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar el partido",
+          variant: "destructive",
+        })
+      }
+    }
   }
 
   const handleAssignReferee = (matchId: number) => {
@@ -98,6 +121,7 @@ export default function PartidosPage() {
             onEdit={handleEditMatch}
             onDelete={handleDeleteMatch}
             onAssign={handleAssignReferee}
+            onRefresh={handleRefresh}
           />
         </div>
       </main>

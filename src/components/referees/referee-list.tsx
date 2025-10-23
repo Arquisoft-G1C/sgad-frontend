@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Mail, Phone, MapPin, MoreHorizontal, Edit, Trash2, Eye, Calendar, Star, Users } from "lucide-react"
+import { Mail, Phone, MapPin, MoreHorizontal, Edit, Trash2, Eye, Calendar, Star, Users, Loader2 } from "lucide-react"
+import { useReferees } from "@/hooks/use-referees"
+import { Referee } from "@/services"
 
-const mockReferees = [
+const mockRefereesOld = [
   {
     id: 1,
     firstName: "Carlos",
@@ -104,35 +106,77 @@ const statusLabels = {
 
 interface RefereeListProps {
   filters: any
-  onEdit: (referee: any) => void
+  onEdit: (referee: Referee) => void
   onDelete: (refereeId: number) => void
-  onViewDetails: (referee: any) => void
+  onViewDetails: (referee: Referee) => void
+  onRefresh?: () => void
 }
 
-export function RefereeList({ filters, onEdit, onDelete, onViewDetails }: RefereeListProps) {
-  const [referees] = useState(mockReferees)
+export function RefereeList({ filters, onEdit, onDelete, onViewDetails, onRefresh }: RefereeListProps) {
+  const { fetchReferees, loading, error } = useReferees()
+  const [referees, setReferees] = useState<Referee[]>([])
+
+  useEffect(() => {
+    loadReferees()
+  }, [])
+
+  const loadReferees = async () => {
+    try {
+      const data = await fetchReferees()
+      setReferees(data)
+    } catch (err) {
+      console.error("Error loading referees:", err)
+    }
+  }
+
+  const handleDelete = async (refereeId: number) => {
+    onDelete(refereeId)
+    await loadReferees()
+    onRefresh?.()
+  }
 
   const filteredReferees = referees.filter((referee) => {
-    if (
-      filters.search &&
-      !`${referee.firstName} ${referee.lastName}`.toLowerCase().includes(filters.search.toLowerCase())
-    ) {
+    if (filters.search && !referee.name.toLowerCase().includes(filters.search.toLowerCase())) {
       return false
     }
     if (filters.category && referee.category !== filters.category) return false
     if (filters.status && referee.status !== filters.status) return false
-    if (filters.specialization && !referee.specializations.includes(filters.specialization)) return false
+    if (filters.specialization && referee.specialization !== filters.specialization) return false
     return true
   })
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  const getInitials = (name: string) => {
+    const parts = name.split(' ')
+    if (parts.length >= 2) {
+      return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase()
+    }
+    return name.substring(0, 2).toUpperCase()
   }
 
-  const getAvailableDays = (availability: any) => {
-    const days = ["L", "M", "X", "J", "V", "S", "D"]
-    const dayKeys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-    return days.filter((_, index) => availability[dayKeys[index]])
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Loader2 className="h-12 w-12 mx-auto text-muted-foreground mb-4 animate-spin" />
+          <p className="text-muted-foreground">Cargando árbitros...</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Users className="h-12 w-12 mx-auto text-destructive mb-4" />
+          <h3 className="text-lg font-medium mb-2 text-destructive">Error al cargar árbitros</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={loadReferees} variant="outline">
+            Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -144,14 +188,14 @@ export function RefereeList({ filters, onEdit, onDelete, onViewDetails }: Refere
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getInitials(referee.firstName, referee.lastName)}
+                    {getInitials(referee.name)}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <h3 className="text-lg font-semibold">
-                      {referee.firstName} {referee.lastName}
+                      {referee.name}
                     </h3>
                     <Badge variant={statusColors[referee.status as keyof typeof statusColors]}>
                       {statusLabels[referee.status as keyof typeof statusLabels]}
@@ -159,6 +203,11 @@ export function RefereeList({ filters, onEdit, onDelete, onViewDetails }: Refere
                     <Badge variant={categoryColors[referee.category as keyof typeof categoryColors]}>
                       {referee.category.toUpperCase()}
                     </Badge>
+                    {referee.available && (
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        Disponible
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -170,52 +219,44 @@ export function RefereeList({ filters, onEdit, onDelete, onViewDetails }: Refere
                       <Phone className="h-4 w-4" />
                       {referee.phone}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {referee.address}
-                    </div>
+                    {referee.license_number && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">Licencia:</span>
+                        <span className="font-medium">{referee.license_number}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-6 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-chart-3" />
-                      <span className="text-muted-foreground">Experiencia:</span>
-                      <span className="font-medium">{referee.experience} años</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-chart-1" />
-                      <span className="text-muted-foreground">Este mes:</span>
-                      <span className="font-medium">{referee.matchesThisMonth} partidos</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground">Valoración:</span>
-                      <span className="font-medium">{referee.rating}/5</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Especializaciones:</span>
-                      <div className="flex gap-1 mt-1">
-                        {referee.specializations.map((spec) => (
-                          <Badge key={spec} variant="outline" className="text-xs">
-                            {spec}
-                          </Badge>
-                        ))}
+                    {referee.experience_years && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-chart-3" />
+                        <span className="text-muted-foreground">Experiencia:</span>
+                        <span className="font-medium">{referee.experience_years} años</span>
                       </div>
-                    </div>
+                    )}
+                    {referee.rating && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">Valoración:</span>
+                        <span className="font-medium">{referee.rating}/5</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Disponible:</span>
-                    <div className="flex gap-1">
-                      {getAvailableDays(referee.availability).map((day) => (
-                        <Badge key={day} variant="secondary" className="text-xs px-2 py-1">
-                          {day}
-                        </Badge>
-                      ))}
+                  {referee.specialization && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Especialización:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {referee.specialization}
+                      </Badge>
                     </div>
-                  </div>
+                  )}
+
+                  {referee.notes && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Notas:</span> {referee.notes}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -234,7 +275,7 @@ export function RefereeList({ filters, onEdit, onDelete, onViewDetails }: Refere
                     <Edit className="h-4 w-4 mr-2" />
                     Editar
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDelete(referee.id)} className="text-destructive">
+                  <DropdownMenuItem onClick={() => handleDelete(referee.id)} className="text-destructive">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Eliminar
                   </DropdownMenuItem>
