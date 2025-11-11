@@ -70,7 +70,7 @@ class RefereeService {
     if (params?.skip) queryParams.append('skip', params.skip.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
 
-    const url = `${this.baseUrl}/referees${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const url = `${this.baseUrl}/referees/${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: this.getHeaders(),
@@ -103,7 +103,7 @@ class RefereeService {
    * Create new referee
    */
   async createReferee(data: RefereeCreate): Promise<Referee> {
-    const response = await fetch(`${this.baseUrl}/referees`, {
+    const response = await fetch(`${this.baseUrl}/referees/`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(data),
